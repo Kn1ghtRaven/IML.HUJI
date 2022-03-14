@@ -1,8 +1,7 @@
 from __future__ import annotations
 import numpy as np
-from numpy.linalg import inv, det, slogdet
 import matplotlib.pyplot as plt
-from pandas import DataFrame
+from numpy.linalg import inv, det, slogdet
 import seaborn as sns
 
 
@@ -191,7 +190,7 @@ class MultivariateGaussian:
         invcov = np.linalg.inv(self.cov_)
         detcov = np.linalg.det(self.cov_)
         number_of_fitures = np.shape(X)[1]
-        return np.sqrt(1 / ((2 * np.pi)**number_of_fitures*detcov)) * np.exp(-1 / 2 * ((X - self.mu_).T * invcov*(X - self.mu_)))
+        return np.sqrt(1 / ((2 * np.pi)**number_of_fitures*detcov)) * np.exp(-1 / 2 * ((X - self.mu_) @ invcov@(X - self.mu_).T))
 
     def change(self, mu: np.ndarray, cov: np.ndarray):
         self.fitted_, self.mu_, self.cov_ = True, mu, cov
@@ -215,36 +214,44 @@ class MultivariateGaussian:
         log_likelihood: float
             log-likelihood calculated over all input data and under given parameters of Gaussian
         """
-        normal = MultivariateGaussian()
-        normal.change(mu, cov)
-        samples = normal.pdf(X)
-        cumsamples = np.cumprod(samples)
-        return np.log(cumsamples[-1])
+        # normal = MultivariateGaussian()
+        # normal.change(mu, cov)
+        # samples = normal.pdf(X)
+        # cumsamples = np.cumprod(samples)
+        invcov = np.linalg.inv(cov)
+        detcov = np.linalg.det(cov)
+        number_of_fitures = np.shape(X)[1]
+        number_of_samples = np.shape(X)[0]
+        return -1/2* (np.log(detcov) + np.sum((X - mu)@ invcov @ (X - mu).T) + number_of_fitures*number_of_samples*np.log(2*np.pi))
 
 if __name__ == '__main__':
     mu = 10
     sigma = 1
     number_of_samples = 1000
     samples = np.random.normal(mu, sigma, number_of_samples)
-    banana = UnivariateGaussian()
+    univar = UnivariateGaussian()
 
     # print(UnivariateGaussian.log_likelihood(mu, sigma, samples))
     mues = np.zeros(int(number_of_samples/10))
     sigmas = np.zeros(int(number_of_samples/10))
     x = np.arange(10, 1001, 10)
     for i in range(1, 101):
-        banana.fit(samples[0: (i*10)-1])
-        mues[i-1] = banana.mu_
-        sigmas[i-1] = banana.var_
-    print((banana.mu_, banana.var_))
+        univar.fit(samples[0: (i * 10) - 1])
+        mues[i-1] = univar.mu_
+        sigmas[i-1] = univar.var_
+    print((univar.mu_, univar.var_))
     plt.plot(x, abs(mues-mu))
     plt.title("distance from Mue")
     plt.show()
-    mean = [0, 0, 4, 0]
-    cov = [[1, 0.2, 0, 0.5],
+    samples.sort()
+    answers = univar.pdf(samples)
+    plt.plot(samples, answers)
+    #multivariate_normal
+    mean = np.array([0, 0, 4, 0])
+    cov = np.array([[1, 0.2, 0, 0.5],
              [0.2, 2, 0, 0],
              [0, 0, 1, 0],
-             [0.5, 0, 0, 1]]
+             [0.5, 0, 0, 1]])
     multi_samples = np.random.multivariate_normal(mean, cov, 1000)
     multi = MultivariateGaussian()
     multi.fit(multi_samples)
@@ -252,15 +259,20 @@ if __name__ == '__main__':
     print(multi.cov_)
     f1 = np.linspace(-10, 10, 200)
     f3 = np.linspace(-10, 10, 200)
-    f2 = np.zeros(20)
-    f4 = np.zeros(20)
     mean5 = [f1, 0, f3, 0]
-    Index = f1
-    Cols = f3
-    # df = DataFrame(MultivariateGaussian.log_likelihood(mean5, cov, multi_samples), index=Index, columns=Cols)
-    df = np.zeros(max(f1.shape), max(f3.shape))
+    maxrow = 0
+    maxcol = 0
+    valmax = -1 * np.inf
+    df = np.zeros((np.shape(f1)[0], np.shape(f3)[0]))
     for row, i in enumerate(f1):
         for col, j in enumerate(f3):
-            mean5 = [i, 0, j, 0]
-
-    sns.heatmap(df, annot=True)
+            mean5 = np.array([i, 0, j, 0])
+            df[row, col] = MultivariateGaussian.log_likelihood(mean5, cov, multi_samples)
+            if valmax < df[row, col]:
+                valmax = df[row, col]
+                maxcol = col
+                maxrow = row
+    sns.heatmap(df)
+    print(valmax)
+    print((maxrow, maxcol))
+    plt.show()
