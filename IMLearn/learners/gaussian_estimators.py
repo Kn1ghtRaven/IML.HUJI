@@ -190,7 +190,7 @@ class MultivariateGaussian:
         invcov = np.linalg.inv(self.cov_)
         detcov = np.linalg.det(self.cov_)
         number_of_fitures = np.shape(X)[1]
-        return np.sqrt(1 / ((2 * np.pi)**number_of_fitures*detcov)) * np.exp(-1 / 2 * ((X - self.mu_) @ invcov@(X - self.mu_).T))
+        return np.sqrt(1 / ((2 * np.pi)**number_of_fitures*detcov)) * np.exp(-1 / 2 * ((X - self.mu_) @ invcov @(X - self.mu_).T))
 
     def change(self, mu: np.ndarray, cov: np.ndarray):
         self.fitted_, self.mu_, self.cov_ = True, mu, cov
@@ -214,15 +214,11 @@ class MultivariateGaussian:
         log_likelihood: float
             log-likelihood calculated over all input data and under given parameters of Gaussian
         """
-        # normal = MultivariateGaussian()
-        # normal.change(mu, cov)
-        # samples = normal.pdf(X)
-        # cumsamples = np.cumprod(samples)
         invcov = np.linalg.inv(cov)
         detcov = np.linalg.det(cov)
         number_of_fitures = np.shape(X)[1]
         number_of_samples = np.shape(X)[0]
-        return -1/2* (np.log(detcov) + np.sum((X - mu)@ invcov @ (X - mu).T) + number_of_fitures*number_of_samples*np.log(2*np.pi))
+        return -1/2* (np.log(detcov) + np.sum((X - mu) @ invcov @ (X - mu).T) + number_of_fitures*number_of_samples*np.log(2*np.pi))
 
 if __name__ == '__main__':
     mu = 10
@@ -239,6 +235,7 @@ if __name__ == '__main__':
         univar.fit(samples[0: (i * 10) - 1])
         mues[i-1] = univar.mu_
         sigmas[i-1] = univar.var_
+    #
     print((univar.mu_, univar.var_))
     plt.plot(x, abs(mues-mu))
     plt.title("distance from Mue")
@@ -246,6 +243,10 @@ if __name__ == '__main__':
     samples.sort()
     answers = univar.pdf(samples)
     plt.plot(samples, answers)
+    plt.title("sampales pdf")
+    plt.xlabel("sampales")
+    plt.ylabel("PDF value")
+    plt.show()
     #multivariate_normal
     mean = np.array([0, 0, 4, 0])
     cov = np.array([[1, 0.2, 0, 0.5],
@@ -259,7 +260,8 @@ if __name__ == '__main__':
     print(multi.cov_)
     f1 = np.linspace(-10, 10, 200)
     f3 = np.linspace(-10, 10, 200)
-    mean5 = [f1, 0, f3, 0]
+    x_axis = np.arange(-10, 11, 1)
+    y_axis = np.arange(-10, 11, 1)
     maxrow = 0
     maxcol = 0
     valmax = -1 * np.inf
@@ -272,7 +274,7 @@ if __name__ == '__main__':
                 valmax = df[row, col]
                 maxcol = col
                 maxrow = row
-    sns.heatmap(df)
+    sns.heatmap(df, xticklabels=x_axis, yticklabels=y_axis)
     print(valmax)
     print((maxrow, maxcol))
     plt.show()
