@@ -107,11 +107,10 @@ class UnivariateGaussian:
         log_likelihood: float
             log-likelihood calculated
         """
-        normal = UnivariateGaussian()
-        normal.change(mu, sigma)
-        samples = normal.pdf(X)
-        cumsamples = np.cumprod(samples)
-        return np.log(cumsamples[-1])
+        mekadem = (1 / np.sqrt(2 * np.pi * sigma))
+        exponent = np.exp(-1 * ((X - mu) ** 2) / (2 * sigma))
+        samples = mekadem *exponent
+        return np.sum(np.log(samples))
 
 
 class MultivariateGaussian:
@@ -160,10 +159,7 @@ class MultivariateGaussian:
         mue = np.zeros(np.shape(X)[1])
         univar = UnivariateGaussian()
         self.mu_ = np.mean(X, 0)
-        # for k in range(np.shape(X)[1]):
-        #     mue[k] = univar.fit(X[:, k]).mu_
         self.cov_ = np.cov(X, rowvar=False)
-        # self.mu_ = mue
         self.fitted_ = True
         return self
 
@@ -219,62 +215,3 @@ class MultivariateGaussian:
         number_of_fitures = np.shape(X)[1]
         number_of_samples = np.shape(X)[0]
         return -1/2* (np.log(detcov) + np.sum((X - mu) @ invcov @ (X - mu).T) + number_of_fitures*number_of_samples*np.log(2*np.pi))
-
-if __name__ == '__main__':
-    mu = 10
-    sigma = 1
-    number_of_samples = 1000
-    samples = np.random.normal(mu, sigma, number_of_samples)
-    univar = UnivariateGaussian()
-
-    # print(UnivariateGaussian.log_likelihood(mu, sigma, samples))
-    mues = np.zeros(int(number_of_samples/10))
-    sigmas = np.zeros(int(number_of_samples/10))
-    x = np.arange(10, 1001, 10)
-    for i in range(1, 101):
-        univar.fit(samples[0: (i * 10) - 1])
-        mues[i-1] = univar.mu_
-        sigmas[i-1] = univar.var_
-    #
-    print((univar.mu_, univar.var_))
-    plt.plot(x, abs(mues-mu))
-    plt.title("distance from Mue")
-    plt.show()
-    samples.sort()
-    answers = univar.pdf(samples)
-    plt.plot(samples, answers)
-    plt.title("sampales pdf")
-    plt.xlabel("sampales")
-    plt.ylabel("PDF value")
-    plt.show()
-    #multivariate_normal
-    mean = np.array([0, 0, 4, 0])
-    cov = np.array([[1, 0.2, 0, 0.5],
-             [0.2, 2, 0, 0],
-             [0, 0, 1, 0],
-             [0.5, 0, 0, 1]])
-    multi_samples = np.random.multivariate_normal(mean, cov, 1000)
-    multi = MultivariateGaussian()
-    multi.fit(multi_samples)
-    print(multi.mu_)
-    print(multi.cov_)
-    f1 = np.linspace(-10, 10, 200)
-    f3 = np.linspace(-10, 10, 200)
-    x_axis = np.arange(-10, 11, 1)
-    y_axis = np.arange(-10, 11, 1)
-    maxrow = 0
-    maxcol = 0
-    valmax = -1 * np.inf
-    df = np.zeros((np.shape(f1)[0], np.shape(f3)[0]))
-    for row, i in enumerate(f1):
-        for col, j in enumerate(f3):
-            mean5 = np.array([i, 0, j, 0])
-            df[row, col] = MultivariateGaussian.log_likelihood(mean5, cov, multi_samples)
-            if valmax < df[row, col]:
-                valmax = df[row, col]
-                maxcol = col
-                maxrow = row
-    sns.heatmap(df, xticklabels=x_axis, yticklabels=y_axis)
-    print(valmax)
-    print((maxrow, maxcol))
-    plt.show()

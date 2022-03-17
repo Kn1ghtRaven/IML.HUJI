@@ -3,17 +3,10 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.io as pio
 import matplotlib.pyplot as plt
-import seaborn as sns
 pio.templates.default = "simple_white"
 
 
 def test_univariate_gaussian():
-    # Question 1 - Draw samples and print fitted model
-
-    # Question 2 - Empirically showing sample mean is consistent
-
-    # Question 3 - Plotting Empirical PDF of fitted model
-
     mu = 10
     sigma = 1
     number_of_samples = 1000
@@ -28,11 +21,13 @@ def test_univariate_gaussian():
         sigmas[i - 1] = univar.var_
     # Question 1 - Draw samples and print fitted model
     print((univar.mu_, univar.var_))
+    # Question 2 - Empirically showing sample mean is consistent
     plt.plot(x, abs(mues - mu))
     plt.title("distance from Mue")
     plt.show()
     samples.sort()
     answers = univar.pdf(samples)
+    # Question 3 - Plotting Empirical PDF of fitted model
     plt.plot(samples, answers)
     plt.title("sampales pdf")
     plt.xlabel("sampales")
@@ -42,9 +37,6 @@ def test_univariate_gaussian():
 
 def test_multivariate_gaussian():
     # Question 4 - Draw samples and print fitted model
-
-    # Question 5 - Likelihood evaluation
-    # Question 6 - Maximum likelihood
     mean = np.array([0, 0, 4, 0])
     cov = np.array([[1, 0.2, 0, 0.5],
              [0.2, 2, 0, 0],
@@ -57,8 +49,6 @@ def test_multivariate_gaussian():
     print(multi.cov_)
     f1 = np.linspace(-10, 10, 200)
     f3 = np.linspace(-10, 10, 200)
-    # x_axis = np.arange(-10, 11, 1)
-    # y_axis = np.arange(-10, 11, 1)
     maxrow = 0
     maxcol = 0
     valmax = -1 * np.inf
@@ -71,20 +61,19 @@ def test_multivariate_gaussian():
                 valmax = df[row, col]
                 maxcol = col
                 maxrow = row
-    # sns.heatmap(df, xticklabels=x_axis, yticklabels=y_axis)
-    # print(valmax)
-    print((np.round(f1[maxrow], 3), np.round(f3[maxcol], 3)))
-    # plt.show()
-
+    # Question 5 - Likelihood evaluation
     xmin, xmax = -10, 10
     ymin, ymax = -10, 10
     fig, ax = plt.subplots()
     ax.imshow(df.T, origin='lower', cmap='cubehelix', aspect='auto',
               interpolation='nearest', extent=[xmin, xmax, ymin, ymax])
-
     ax.axis([xmin, xmax, ymin, ymax])
+    plt.title("heatmap of MultivariateGaussian")
+    plt.xlabel("f1")
+    plt.ylabel("f3")
     plt.show()
-
+    # Question 6 - Maximum likelihood
+    print((np.round(f1[maxrow], 3), np.round(f3[maxcol], 3)))
 
 if __name__ == '__main__':
     np.random.seed(0)
