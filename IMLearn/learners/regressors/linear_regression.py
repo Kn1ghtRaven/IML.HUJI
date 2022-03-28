@@ -5,6 +5,7 @@ import numpy as np
 from numpy.linalg import pinv
 
 from IMLearn import BaseEstimator
+from IMLearn.metrics import mean_square_error
 
 
 class LinearRegression(BaseEstimator):
@@ -51,7 +52,10 @@ class LinearRegression(BaseEstimator):
         -----
         Fits model with or without an intercept depending on value of `self.include_intercept_`
         """
-        U, sigma, Vt  = np.linalg.svd(X, full_matrices=False)
+        if self.include_intercept_:
+            intercept = np.ones([np.shape(X)[0], 1])
+            X = np.concatenate((intercept, X), axis=1)
+        U, sigma, Vt = np.linalg.svd(X, full_matrices=False)
         sigma_inv = np.linalg.inv(np.diag(sigma))
         self.coefs_ = Vt.T @ sigma_inv @ U.T @ y
 
@@ -69,6 +73,9 @@ class LinearRegression(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
+        if self.include_intercept_:
+            intercept = np.ones([np.shape(X)[0], 1])
+            X = np.concatenate((intercept, X), axis=1)
         return X @ self.coefs_
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
@@ -89,10 +96,10 @@ class LinearRegression(BaseEstimator):
             Performance under MSE loss function
         """
         theta = X @ self.coefs_
-        return
+        return mean_square_error(y, theta)
 
 if __name__ == '__main__':
-    lin = LinearRegression(True)
+    lin = LinearRegression()
     X = np.array([1, 2, 3])
     X = X.reshape([-1, 1])
     pred = np.array([4, 5, 6])
