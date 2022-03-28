@@ -16,9 +16,9 @@ def mean_square_error(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     -------
     MSE of given predictions
     """
-    theta = y_true - y_pred
+    theta = y_pred - y_true
     theta = np.power(theta, 2)
-    length = len(y_pred)
+    length = len(theta)
     return 1/length * np.sum(theta)
 
 
