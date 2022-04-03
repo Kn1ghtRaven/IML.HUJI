@@ -1,7 +1,10 @@
 from __future__ import annotations
 from typing import NoReturn
-from . import LinearRegression
-from ...base import BaseEstimator
+# from . import LinearRegression
+# from ...base import BaseEstimator
+from IMLearn.learners.regressors import LinearRegression
+from IMLearn import BaseEstimator
+from IMLearn.metrics import mean_square_error
 import numpy as np
 
 
@@ -19,7 +22,8 @@ class PolynomialFitting(BaseEstimator):
             Degree of polynomial to fit
         """
         super().__init__()
-        raise NotImplementedError()
+        self._k = k
+        self._liniar = LinearRegression(include_intercept=True)
 
     def _fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
         """
@@ -33,7 +37,8 @@ class PolynomialFitting(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-        raise NotImplementedError()
+        X_vandar = self.__transform(X)
+        self._liniar.fit(X_vandar, y)
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -49,7 +54,7 @@ class PolynomialFitting(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        raise NotImplementedError()
+        return self._liniar.predict(self.__transform(X))
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -68,7 +73,7 @@ class PolynomialFitting(BaseEstimator):
         loss : float
             Performance under MSE loss function
         """
-        raise NotImplementedError()
+        return self._liniar.loss(self.__transform(X), y)
 
     def __transform(self, X: np.ndarray) -> np.ndarray:
         """
@@ -83,4 +88,22 @@ class PolynomialFitting(BaseEstimator):
         transformed: ndarray of shape (n_samples, k+1)
             Vandermonde matrix of given samples up to degree k
         """
-        raise NotImplementedError()
+        return np.vander(X, self._k+1)
+
+if __name__ == '__main__':
+    poly = PolynomialFitting(2)
+    np.random.seed(0)
+    X = 5 * np.random.random_sample([5, 2])
+    y = 5 * np.random.random_sample([5, 1])
+    y = y.reshape([-1, 1])
+    pred = 5 * np.random.random_sample([3, 2])
+    # X = np.arange(1, 10)
+    # X = np.concatenate([X, X], axis=1)
+    # y = np.power(X, 3) + 20
+    poly.fit(X, y)
+    f1 = 11
+    f2 = 12
+    pred = np.array([f1, f2])
+    print(poly.predict(pred))
+    print(f1*f1*f1)
+    print(f2 * f2 * f2)

@@ -7,6 +7,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 import plotly.io as pio
+import matplotlib.pyplot as plt
 pio.templates.default = "simple_white"
 
 
@@ -65,8 +66,8 @@ def feature_evaluation(X: pd.DataFrame, y: pd.Series, output_path: str = ".") ->
     output_path: str (default ".")
         Path to folder in which plots are saved
     """
-    X = pd.concat([X, y], axis='columns')
-    sigma = X.std()
+    Xy = pd.concat([X, y], axis='columns')
+    sigma = Xy.std()
     # sigma_y = y.std()
     # XY = X.dot(y)
     covariance = X.cov()
@@ -76,22 +77,23 @@ def feature_evaluation(X: pd.DataFrame, y: pd.Series, output_path: str = ".") ->
     # sigma_pow= sigma.T.dot(sigma)
     person = covariance/sigma_pow
     person.loc[person.price < 0, "price"] = person["price"]*-1
+    for i in X.columns:
+        plt.scatter(Xy[i], Xy["price"])
+        plt.savefig(output_path + str(i) + "_vs_price.png")
     print("1")
-    raise NotImplementedError()
 
 
 if __name__ == '__main__':
     np.random.seed(0)
     # Question 1 - Load and preprocessing of housing prices dataset
     df, cancellation_labels = load_data("../datasets/house_prices.csv")
-    feature_evaluation(df, cancellation_labels, "")
+    feature_evaluation(df, cancellation_labels, "../figs/")
     train_X, train_y, test_X, test_y = split_train_test(df,cancellation_labels)
 
     # Question 2 - Feature evaluation with respect to response
-    raise NotImplementedError()
+    # raise NotImplementedError()
 
     # Question 3 - Split samples into training- and testing sets.
-    raise NotImplementedError()
 
     # Question 4 - Fit model over increasing percentages of the overall training data
     # For every percentage p in 10%, 11%, ..., 100%, repeat the following 10 times:
@@ -100,4 +102,6 @@ if __name__ == '__main__':
     #   3) Test fitted model over test set
     #   4) Store average and variance of loss over test set
     # Then plot average loss as function of training size with error ribbon of size (mean-2*std, mean+2*std)
+    p = np.arange(10, 101)
+
     raise NotImplementedError()
