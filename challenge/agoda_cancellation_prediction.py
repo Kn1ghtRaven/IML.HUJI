@@ -5,6 +5,35 @@ from IMLearn.utils import split_train_test
 import numpy as np
 import pandas as pd
 
+from challenge.panelty import getPenalty
+
+
+def load_data_test(filename: str):
+    full_data = pd.read_csv(filename).drop_duplicates()
+    features = full_data[[
+                          "hotel_star_rating",
+                          "original_selling_amount",
+                          # "charge_option",
+                          # "original_payment_method",
+                          "original_payment_currency",
+                          "guest_is_not_the_customer",
+                          "origin_country_code",
+                          "no_of_adults", "no_of_children", "no_of_extra_bed",
+                          "no_of_room",
+                          'cancellation_policy_code', 'checkout_date', 'checkin_date']]
+    para_list = [ "origin_country_code", "original_payment_currency"]#, "original_payment_method"]
+    # features['charge_option'].replace(['Pay Later', 'Pay at Check-in', 'Pay Now'], [0, 1, -1], inplace=True)
+    # features[['checkin_date', 'checkout_date']] = features[['checkin_date', 'checkout_date']].apply(pd.to_datetime)
+    # features['days'] = (features['checkout_date'] - features['checkin_date']).dt.days
+    # features["penalty"] = getPenalty(features['cancellation_policy_code'])\
+    #          (11, features['original_selling_amount'], features['days'])
+    features = features.drop(columns=["checkin_date", "cancellation_policy_code", "checkout_date"])
+    features = categorail_var(features, para_list)
+    features.dropna()
+    labels = full_data["cancellation_datetime"]
+    labels = labels.fillna(0)
+    labels[labels != 0] = 1
+    return features, labels
 
 def load_data(filename: str):
     """
@@ -35,6 +64,7 @@ def load_data(filename: str):
                           "request_nonesmoke", "request_latecheckin",
                           "request_highfloor", "request_largebed", "request_twinbeds",
                           "request_airport", "request_earlycheckin"]]
+
     features.dropna()
     features[['checkin_date', 'checkout_date', 'booking_datetime']] = features[['checkin_date', 'checkout_date', 'booking_datetime']].apply(pd.to_datetime)
     features['days'] = (features['checkout_date'] - features['checkin_date']).dt.days
@@ -48,8 +78,8 @@ def load_data(filename: str):
     features = categorail_var(features, para_list)
     features = features.fillna(0)
     labels = full_data["cancellation_datetime"]
-    labels = labels.fillna(-1)
-    labels[labels != -1] = 1
+    labels = labels.fillna(0)
+    labels[labels != 0] = 1
     return features, labels
 
 def categorail_var(features , str_var_list):
@@ -88,7 +118,7 @@ if __name__ == '__main__':
     np.random.seed(0)
 
     # Load data
-    df, cancellation_labels = load_data("../datasets/agoda_cancellation_train.csv")
+    df, cancellation_labels = load_data_test("../datasets/agoda_cancellation_train.csv")
     train_X, train_y, test_X, test_y = split_train_test(df, cancellation_labels)
 
     # Fit model over data
@@ -96,3 +126,5 @@ if __name__ == '__main__':
 
     # Store model predictions over test set
     evaluate_and_export(estimator, test_X, "id1_id2_id3.csv")
+
+    print(estimator.present(test_X, test_y.astype('bool')))

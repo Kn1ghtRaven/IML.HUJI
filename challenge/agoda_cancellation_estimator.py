@@ -24,7 +24,7 @@ class AgodaCancellationEstimator(BaseEstimator):
         ----------
 
         """
-        self._models = LogisticRegression(max_iter=100)
+        self._models = LogisticRegression(max_iter=1000)
         # self._models = SVC(kernel='linear', probability=False)
         # self._model_names = "BRF SVM"
 
@@ -64,6 +64,9 @@ class AgodaCancellationEstimator(BaseEstimator):
             Predicted responses of given samples
         """
         return self._models.predict(X)
+
+    def present(self, X, y):
+        return self._models.score(X, y)
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
