@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 pio.templates.default = "simple_white"
 
 
+from sklearn import linear_model
+
 def load_data(filename: str):
     """
     Load house prices dataset and preprocess data.
@@ -26,16 +28,21 @@ def load_data(filename: str):
     """
     full_data = pd.read_csv(filename).drop_duplicates()
     features = full_data
-    # features[['date']] = features[['date']].apply(pd.to_datetime)
-    # features["date"] = pd.to_datetime(features["date"], format='%Y%m%d%T')
-    # features["days"] = (features['date'] - pd.to_datetime('20140101', format='%Y%m%d')).dt.days
-    para_list = ["zipcode"]
+    bad_rows = ["price", "bedrooms", "bathrooms", "sqft_living", "sqft_lot", "floors"]
+    for col in bad_rows:
+        features = features[features[col] > 0]
+    # features["date"] = pd.Series(features["date"].T.str.slice(stop=8))
+    Start = pd.to_datetime(features["date"])
+    End = pd.to_datetime('2014-01-01 00:00', format='%Y%m%d%T', errors='ignore')
+    features["days"] = (Start - pd.to_datetime(End)).dt.days
+    # features["month"] = (Start - pd.to_datetime(End)).dt.month
+    # features["years"] = (Start - pd.to_datetime(End)).dt.year
+    # para_list = ["zipcode"]
     features.loc[features.yr_renovated == 0, "yr_renovated"] = features["yr_built"]
-    # features["sqft_living" < 0] = 0
-    features = categorail_var(features, para_list)
+    # features = categorail_var(features, para_list)
     features = features.dropna()
     labels = features["price"]
-    features = features.drop(columns=["date", "price", "id"])
+    features = features.drop(columns=["date", "price", "id", "lat", "long"])
     return features, labels
 
 
@@ -70,7 +77,7 @@ def feature_evaluation(X: pd.DataFrame, y: pd.Series, output_path: str = ".") ->
     sigma = Xy.std()
     # sigma_y = y.std()
     # XY = X.dot(y)
-    covariance = X.cov()
+    covariance = Xy.cov()
     dfA = pd.DataFrame(sigma)
     dfB = pd.DataFrame(sigma)
     sigma_pow = dfA.dot(dfB.T)
@@ -78,17 +85,17 @@ def feature_evaluation(X: pd.DataFrame, y: pd.Series, output_path: str = ".") ->
     person = covariance/sigma_pow
     person.loc[person.price < 0, "price"] = person["price"]*-1
     for i in X.columns:
-        plt.scatter(Xy[i], Xy["price"])
-        plt.savefig(output_path + str(i) + "_vs_price.png")
-    print("1")
+        fig = px.scatter(Xy, x=i, y="price", title="the Pearson Correlation :" + str(person[i]["price"]))
+        fig.write_image(output_path + str(i) + "_vs_price.png")
+
 
 
 if __name__ == '__main__':
     np.random.seed(0)
     # Question 1 - Load and preprocessing of housing prices dataset
     df, cancellation_labels = load_data("../datasets/house_prices.csv")
-    feature_evaluation(df, cancellation_labels, "../figs/")
-    train_X, train_y, test_X, test_y = split_train_test(df,cancellation_labels)
+    # feature_evaluation(df, cancellation_labels, "../figs/")
+    train_X, train_y, test_X, test_y = split_train_test(df, cancellation_labels)
 
     # Question 2 - Feature evaluation with respect to response
     # raise NotImplementedError()
@@ -102,6 +109,70 @@ if __name__ == '__main__':
     #   3) Test fitted model over test set
     #   4) Store average and variance of loss over test set
     # Then plot average loss as function of training size with error ribbon of size (mean-2*std, mean+2*std)
-    p = np.arange(10, 101)
-
-    raise NotImplementedError()
+    present = np.arange(10, 101)
+    reps = np.arange(10)
+    mue = []
+    std = []
+    confidence_up = []
+    confidence_down = []
+    lin_reg = LinearRegression()
+    # lin_reg = linear_model.LinearRegression()
+    for p in present:
+        sample_loss = np.empty([0])
+        for r in reps:
+            train_X_change, train_y_change, test_X_change, test_y_change = split_train_test(train_X, train_y, p/100)
+            lin_reg.fit(train_X_change, train_y_change)
+            sample_loss = np.append(sample_loss, lin_reg.loss(test_X, test_y))
+        mue.append(sample_loss.mean())
+        std.append(sample_loss.std())
+        confidence_up.append(mue[-1] + 2*std[-1])
+        confidence_down.append(mue[-1] - 2 * std[-1])
+    pan_mue = pd.Series(mue)
+    pan_confidence_up = pd.Series(confidence_up)
+    pan_confidence_down = pd.Series(confidence_down)
+    df["mue"] = pan_mue
+    df["confidence_up"] = pan_confidence_up
+    df["confidence_down"] = pan_confidence_down
+    fig = go.Figure([
+        go.Scatter(
+            name='MeanError',
+            x=present,
+            y=df['mue'],
+            mode='lines',
+            line=dict(color='rgb(31, 119, 180)'),
+        ),
+        go.Scatter(
+            name='Upper Bound',
+            x=present,
+            y=df['confidence_up'],
+            mode='lines',
+            marker=dict(color="#444"),
+            line=dict(width=0),
+            showlegend=False
+        ),
+        go.Scatter(
+            name='Lower Bound',
+            x=present,
+            y=df['confidence_down'],
+            marker=dict(color="#444"),
+            line=dict(width=0),
+            mode='lines',
+            fillcolor='rgba(68, 68, 68, 0.3)',
+            fill='tonexty',
+            showlegend=False
+        )
+    ])
+    fig.update_layout(
+        yaxis_title='loss in test set',
+        xaxis_title='present',
+        title=' mean loss as a function of p% with confidence interval',
+        hovermode="x"
+    )
+    fig.show()
+    # fig = px.line(df, x=present, y=mue)
+    # fig.write_image()
+    plt.plot(present, mue)
+    plt.plot(present, confidence_up)
+    plt.plot(present, confidence_down)
+    print(mue[-1])
+    plt.show()
