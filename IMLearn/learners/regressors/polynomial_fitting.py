@@ -89,21 +89,3 @@ class PolynomialFitting(BaseEstimator):
             Vandermonde matrix of given samples up to degree k
         """
         return np.vander(X, self._k+1)
-
-if __name__ == '__main__':
-    poly = PolynomialFitting(2)
-    np.random.seed(0)
-    X = 5 * np.random.random_sample([5, 2])
-    y = 5 * np.random.random_sample([5, 1])
-    y = y.reshape([-1, 1])
-    pred = 5 * np.random.random_sample([3, 2])
-    # X = np.arange(1, 10)
-    # X = np.concatenate([X, X], axis=1)
-    # y = np.power(X, 3) + 20
-    poly.fit(X, y)
-    f1 = 11
-    f2 = 12
-    pred = np.array([f1, f2])
-    print(poly.predict(pred))
-    print(f1*f1*f1)
-    print(f2 * f2 * f2)

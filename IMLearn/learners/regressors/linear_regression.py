@@ -57,11 +57,8 @@ class LinearRegression(BaseEstimator):
         if self.include_intercept_:
             intercept = np.ones([np.shape(X)[0], 1])
             samples = np.concatenate((intercept, X), axis=1)
-        U, sigma, Vt = np.linalg.svd(samples, full_matrices=False)
-        sigma_inv = np.linalg.pinv(np.diag(sigma))
-        self.coefs_ = Vt.T @ sigma_inv @ U.T @ y
-        # inv_samples = pinv(samples)
-        # self.coefs_ = inv_samples @ y
+        inv_samples = pinv(samples)
+        self.coefs_ = inv_samples @ y
 
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
@@ -103,21 +100,3 @@ class LinearRegression(BaseEstimator):
         theta = self._predict(X)
         return mean_square_error(y, theta)
 
-if __name__ == '__main__':
-    np.random.seed(0)
-    X = 5 * np.random.random_sample([3, 3])
-    y = 5 * np.random.random_sample([3, 1])
-    y = y.reshape([-1, 1])
-    pred = 5 * np.random.random_sample([3, 3])
-
-    reg = linear_model.LinearRegression()
-    reg.fit(X, y)
-
-    print('\nsklearn LR Corfficients: \n', reg.coef_)
-    # print('\nsklearn LR variance score: {}'.format(reg.score(x_test,y_test)))
-
-    my_reg = LinearRegression(False)
-    my_reg.fit(X, y)
-    print('\n MY Corfficients: \n', my_reg.coefs_)
-    print('\n MY reg: \n', my_reg.predict(pred))
-    print('\n SKlern reg: \n', reg.predict(pred))

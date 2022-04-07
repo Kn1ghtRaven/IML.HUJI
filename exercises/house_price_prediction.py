@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 pio.templates.default = "simple_white"
 
 
+
 from sklearn import linear_model
 
 def load_data(filename: str):
@@ -26,23 +27,36 @@ def load_data(filename: str):
     Design matrix and response vector (prices) - either as a single
     DataFrame or a Tuple[DataFrame, Series]
     """
-    full_data = pd.read_csv(filename).drop_duplicates()
+    full_data = pd.read_csv(filename).dropna().drop_duplicates()
     features = full_data
-    bad_rows = ["price", "bedrooms", "bathrooms", "sqft_living", "sqft_lot", "floors"]
-    for col in bad_rows:
+    bad_rows_if_negative = ["bathrooms", "floors", "sqft_basement",
+                                   "yr_renovated"]
+    bad_rows_if_not_positive = ["price", "sqft_living", "sqft_lot",
+                               "sqft_above", "yr_built", "sqft_living15",
+                               "sqft_lot15"]
+    for col in bad_rows_if_negative:
+        features = features[features[col] >= 0]
+    for col in bad_rows_if_not_positive:
         features = features[features[col] > 0]
-    # features["date"] = pd.Series(features["date"].T.str.slice(stop=8))
     Start = pd.to_datetime(features["date"])
     End = pd.to_datetime('2014-01-01 00:00', format='%Y%m%d%T', errors='ignore')
     features["days"] = (Start - pd.to_datetime(End)).dt.days
-    # features["month"] = (Start - pd.to_datetime(End)).dt.month
-    # features["years"] = (Start - pd.to_datetime(End)).dt.year
+    features = features[features["view"].isin(range(0, 5)) & features[
+        "condition"].isin(range(3, 6)) & features["grade"].isin(range(5, 12))]
+    features = features[features["bedrooms"] < 7]
+    features = features[features["bathrooms"] < 4]
+    features = features[features["sqft_living"] < 5000]
+    features = features[features["floors"] < 4]
+    features = features[features["sqft_lot"] < 84000]
+    features = features[features["sqft_lot15"] < 1000000]
+    features = features[features["sqft_above"] < 3050]
+    # features = features[features["sqft_above"] < 1000]
     # para_list = ["zipcode"]
     features.loc[features.yr_renovated == 0, "yr_renovated"] = features["yr_built"]
     # features = categorail_var(features, para_list)
     features = features.dropna()
     labels = features["price"]
-    features = features.drop(columns=["date", "price", "id", "lat", "long"])
+    features = features.drop(columns=["date", "price", "id", "lat", "long", "zipcode"])
     return features, labels
 
 
@@ -75,13 +89,10 @@ def feature_evaluation(X: pd.DataFrame, y: pd.Series, output_path: str = ".") ->
     """
     Xy = pd.concat([X, y], axis='columns')
     sigma = Xy.std()
-    # sigma_y = y.std()
-    # XY = X.dot(y)
     covariance = Xy.cov()
     dfA = pd.DataFrame(sigma)
     dfB = pd.DataFrame(sigma)
     sigma_pow = dfA.dot(dfB.T)
-    # sigma_pow= sigma.T.dot(sigma)
     person = covariance/sigma_pow
     person.loc[person.price < 0, "price"] = person["price"]*-1
     for i in X.columns:
@@ -94,13 +105,12 @@ if __name__ == '__main__':
     np.random.seed(0)
     # Question 1 - Load and preprocessing of housing prices dataset
     df, cancellation_labels = load_data("../datasets/house_prices.csv")
-    # feature_evaluation(df, cancellation_labels, "../figs/")
-    train_X, train_y, test_X, test_y = split_train_test(df, cancellation_labels)
 
     # Question 2 - Feature evaluation with respect to response
-    # raise NotImplementedError()
+    feature_evaluation(df, cancellation_labels, "../figs/")
 
     # Question 3 - Split samples into training- and testing sets.
+    train_X, train_y, test_X, test_y = split_train_test(df, cancellation_labels)
 
     # Question 4 - Fit model over increasing percentages of the overall training data
     # For every percentage p in 10%, 11%, ..., 100%, repeat the following 10 times:
@@ -115,16 +125,16 @@ if __name__ == '__main__':
     std = []
     confidence_up = []
     confidence_down = []
-    lin_reg = LinearRegression()
     # lin_reg = linear_model.LinearRegression()
     for p in present:
+        lin_reg = LinearRegression()
         sample_loss = np.empty([0])
         for r in reps:
             train_X_change, train_y_change, test_X_change, test_y_change = split_train_test(train_X, train_y, p/100)
             lin_reg.fit(train_X_change, train_y_change)
             sample_loss = np.append(sample_loss, lin_reg.loss(test_X, test_y))
-        mue.append(sample_loss.mean())
-        std.append(sample_loss.std())
+        mue.append(np.mean(sample_loss))
+        std.append(np.std(sample_loss))
         confidence_up.append(mue[-1] + 2*std[-1])
         confidence_down.append(mue[-1] - 2 * std[-1])
     pan_mue = pd.Series(mue)
@@ -168,11 +178,17 @@ if __name__ == '__main__':
         title=' mean loss as a function of p% with confidence interval',
         hovermode="x"
     )
-    fig.show()
+    # fig.update_yaxes(range=[-40000000000, 40000000000])
+    # fig.update_xaxes(range=[10, 100])
+    # fig.update()
+    fig.write_image("../images/ex2q14graph.png")
+    # fig.show()
     # fig = px.line(df, x=present, y=mue)
     # fig.write_image()
     plt.plot(present, mue)
     plt.plot(present, confidence_up)
     plt.plot(present, confidence_down)
-    print(mue[-1])
+    print(cancellation_labels.mean())
+    print(cancellation_labels.var())
+    print(np.sqrt(mue[-1]))
     plt.show()
