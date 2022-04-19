@@ -6,6 +6,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
+from sklearn.metrics import confusion_matrix
+
 
 class AgodaCancellationEstimator(BaseEstimator):
     """
@@ -24,9 +26,9 @@ class AgodaCancellationEstimator(BaseEstimator):
         ----------
 
         """
-        self._models = LogisticRegression(max_iter=1000)
-        # self._models = SVC(kernel='linear', probability=False)
-        # self._model_names = "BRF SVM"
+        # self._models = LogisticRegression(max_iter=1000)
+        self._models = SVC(kernel='rbf', probability=False)
+        self._model_names = "BRF SVM"
 
         super().__init__()
 
@@ -47,7 +49,7 @@ class AgodaCancellationEstimator(BaseEstimator):
 
         """
         # self._models.fit(X, y)
-        self._models.fit(X.astype('float'), y.astype('float'))
+        self._models.fit(X.astype('int'), y.astype('int'))
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -66,6 +68,7 @@ class AgodaCancellationEstimator(BaseEstimator):
         return self._models.predict(X)
 
     def present(self, X, y):
+        confusion_matrix(y, self.predict(X))
         return self._models.score(X, y)
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
