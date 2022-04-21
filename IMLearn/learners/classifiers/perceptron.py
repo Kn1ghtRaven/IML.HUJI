@@ -8,7 +8,7 @@ from ...metrics import misclassification_error
 
 
 def default_callback(fit: Perceptron, x: np.ndarray, y: int):
-    pass
+    return fit.loss(x, y)
 
 
 class Perceptron(BaseEstimator):
