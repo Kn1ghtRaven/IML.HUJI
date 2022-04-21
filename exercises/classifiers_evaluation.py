@@ -3,7 +3,11 @@ import numpy as np
 from typing import Tuple
 import plotly.graph_objects as go
 import plotly.io as pio
+import plotly.express as px
 from plotly.subplots import make_subplots
+
+from IMLearn.learners.classifiers.perceptron import default_callback
+
 pio.templates.default = "simple_white"
 
 
@@ -26,6 +30,8 @@ def load_dataset(filename: str) -> Tuple[np.ndarray, np.ndarray]:
         Class vector specifying for each sample its class
 
     """
+    full_data = np.load(filename)
+
     raise NotImplementedError()
 
 
@@ -36,16 +42,28 @@ def run_perceptron():
     Create a line plot that shows the perceptron algorithm's training loss values (y-axis)
     as a function of the training iterations (x-axis).
     """
+    iteretions = 1000
     for n, f in [("Linearly Separable", "linearly_separable.npy"), ("Linearly Inseparable", "linearly_inseparable.npy")]:
         # Load dataset
-        raise NotImplementedError()
-
-        # Fit Perceptron and record loss in each fit iteration
+        data, label = load_dataset(f)
         losses = []
-        raise NotImplementedError()
-
+        for iteretion in range(1, iteretions+1):
+            losses_per_iter = []
+            model = Perceptron(max_iter=iteretion)
+            # Fit Perceptron and record loss in each fit iteration
+            model.fit(data, label)
+            for index, row in enumerate(data):
+                losses_per_iter.append(default_callback(model, row, label[index]))
+            losses.append(np.sum(losses_per_iter))
         # Plot figure
-        raise NotImplementedError()
+        fig = px.line(x=np.arange(1, iteretions+1), y=losses)
+        fig.update_layout(
+            yaxis_title='training loss values',
+            xaxis_title='iteretions',
+            title=n,
+        )
+        fig.show()
+
 
 
 def compare_gaussian_classifiers():
