@@ -60,6 +60,16 @@ def seriesPenalty(penaltyStringSerie, numDays, priceList, bookingLengthList):
 
 def load_test_set(filename: str):
     test_data = pd.read_csv(filename)
+    special_requests = ['request_nonesmoke', 'request_latecheckin',
+                        'request_highfloor', 'request_largebed',
+                        'request_twinbeds', 'request_airport',
+                        'request_earlycheckin']
+    test_data[['checkin_date', 'checkout_date', 'booking_datetime']] = test_data[['checkin_date', 'checkout_date', 'booking_datetime']].apply(pd.to_datetime)
+    test_data['days'] = (test_data['checkout_date'] - test_data['checkin_date']).dt.days
+    test_data['days_in_advance'] = (test_data['checkin_date'] - test_data['booking_datetime']).dt.days
+    for name in special_requests:
+        test_data[name] = test_data[name].fillna(0)
+    test_data['total_of_special_requests'] = sum([test_data[col] for col in special_requests])
     return test_data
 
 
@@ -68,15 +78,42 @@ def load_data_test(filename: str):
     features = full_data[["original_payment_method",
                           "hotel_star_rating",
                           "no_of_adults", "no_of_children", "no_of_extra_bed",
-                          "no_of_room", "origin_country_code", "original_selling_amount"]]
+                          "no_of_room", "origin_country_code", "original_selling_amount",'request_nonesmoke',
+                          'request_latecheckin',
+                          'request_highfloor', 'request_largebed',
+                          'request_twinbeds', 'request_airport',
+                          'request_earlycheckin', "cancellation_datetime",'checkin_date', 'checkout_date', 'booking_datetime']]
     para_list = ["origin_country_code", "original_payment_method"]
     features = categorail_var(features, para_list)
-    full_data[['checkin_date', 'checkout_date', "cancellation_datetime"]] = full_data[['checkin_date', 'checkout_date', "cancellation_datetime"]].apply(pd.to_datetime)
-    full_data['days'] = (full_data["checkout_date"] - full_data["checkin_date"]).dt.days
-    features["penalty"] = seriesPenalty(full_data['cancellation_policy_code'],11,full_data['original_selling_amount'],full_data['days'])
-    labels = full_data["cancellation_datetime"]
-    labels = labels.fillna(0)
-    labels[labels != 0] = 1
+    # full_data[['checkin_date', 'checkout_date', "cancellation_datetime"]] = full_data[['checkin_date', 'checkout_date', "cancellation_datetime"]].apply(pd.to_datetime)
+    # full_data['days'] = (full_data["checkout_date"] - full_data["checkin_date"]).dt.days
+    # features["penalty"] = seriesPenalty(full_data['cancellation_policy_code'],11,full_data['original_selling_amount'],full_data['days'])
+    features['cancellation_time'] = features['cancellation_datetime'].fillna(features['checkin_date'])  # need to see if this line works
+    features[['checkin_date', 'checkout_date', 'booking_datetime', 'cancellation_time']] = features[['checkin_date', 'checkout_date', 'booking_datetime','cancellation_time']].apply(pd.to_datetime)
+    features['time_to_cancel'] = (features['cancellation_time'] - features['booking_datetime']).dt.days  # need to see if it is possitive or negative
+    features = features[features['time_to_cancel'] < 12]# need to recheck this line
+    special_requests = ['request_nonesmoke', 'request_latecheckin',
+                        'request_highfloor', 'request_largebed',
+                        'request_twinbeds', 'request_airport',
+                        'request_earlycheckin']
+    no_null = [ 'hotel_star_rating', 'no_of_adults',
+            'no_of_children',           'no_of_extra_bed',
+                'no_of_room',   'original_selling_amount']
+    for name in no_null:
+        features[name] = features[name].fillna(0)
+    for name in special_requests:
+        features[name] = features[name].fillna(0)
+    features['total_of_special_requests'] = sum(
+        [features[col] for col in special_requests])
+    features["cancellation_datetime"] = features["cancellation_datetime"].fillna(0)
+    features["cancellation_datetime"][features["cancellation_datetime"] != 0] = 1
+    features['days'] = (features['checkout_date'] - features['checkin_date']).dt.days
+    features['days_in_advance'] = (features['checkin_date'] - features['booking_datetime']).dt.days
+    labels = features["cancellation_datetime"]
+    features = features.drop(
+            columns=["cancellation_datetime", 'checkin_date', 'checkout_date', 'booking_datetime'])
+    features = features.drop(
+        columns=no_null)
     return features, labels
 
 def load_data(filename: str):
@@ -84,12 +121,23 @@ def load_data(filename: str):
     features = full_data[["original_payment_method",
                           "hotel_star_rating",
                           "no_of_adults", "no_of_children", "no_of_extra_bed",
-                          "no_of_room", "origin_country_code", "original_selling_amount"]]
+                          "no_of_room", "origin_country_code", "original_selling_amount",
+                                                               'request_nonesmoke',
+                          'request_latecheckin',
+                          'request_highfloor', 'request_largebed',
+                          'request_twinbeds', 'request_airport',
+                          'request_earlycheckin'
+                          ]]
     para_list = ["origin_country_code", "original_payment_method"]
     features = categorail_var(features, para_list)
     full_data[['checkin_date', 'checkout_date']] = full_data[['checkin_date', 'checkout_date']].apply(pd.to_datetime)
-    full_data['days'] = (full_data["checkout_date"] - full_data["checkin_date"]).dt.days
-    features["penalty"] = seriesPenalty(full_data['cancellation_policy_code'],11,full_data['original_selling_amount'],full_data['days'])
+    special_requests = ['request_nonesmoke', 'request_latecheckin',
+                        'request_highfloor', 'request_largebed',
+                        'request_twinbeds', 'request_airport',
+                        'request_earlycheckin']
+    features['total_of_special_requests'] = sum([features[col] for col in special_requests])
+    features['days'] = (full_data["checkout_date"] - full_data["checkin_date"]).dt.days
+    # features["penalty"] = seriesPenalty(full_data['cancellation_policy_code'],11,full_data['original_selling_amount'],full_data['days'])
     return features
 
 # def load_data(filename: str):
@@ -107,7 +155,6 @@ def load_data(filename: str):
 #     2) Tuple of pandas.DataFrame and Series
 #     3) Tuple of ndarray of shape (n_samples, n_features) and ndarray of shape (n_samples,)
 #     """
-#     # TODO - replace below code with any desired preprocessing
 #     full_data = pd.read_csv(filename).drop_duplicates()
 #     features = full_data[["booking_datetime", "checkin_date", "checkout_date",
 #                            "hotel_country_code", "hotel_star_rating",
@@ -173,11 +220,11 @@ if __name__ == '__main__':
     # Load data
     df, cancellation_labels = load_data_test("../datasets/agoda_cancellation_train.csv")
     train_X, train_y, test_X, test_y = split_train_test(df, cancellation_labels)
-    test = load_data("../challenge/testsetweekly/test_set_week_2.csv")
+    test = load_test_set("../challenge/testsetweekly/test_set_week_3.csv")
     # Fit model over data
     cols = train_X.columns.intersection(test.columns)
     estimator = AgodaCancellationEstimator().fit(train_X[cols], train_y)
-
+    # estimator.report(test_X[cols], test_y)
     # Store model predictions over test set
     # evaluate_and_export(estimator, test_X, "318636081_324190693_208543520.csv")
     evaluate_and_export(estimator, test[cols], "318636081_324190693_208543520.csv")

@@ -7,6 +7,9 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.metrics import confusion_matrix
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
 
 
 class AgodaCancellationEstimator(BaseEstimator):
@@ -27,9 +30,9 @@ class AgodaCancellationEstimator(BaseEstimator):
 
         """
         # self._models = LogisticRegression(max_iter=1000)
-        self._models = SVC(kernel='rbf', probability=False)
-        self._model_names = "BRF SVM"
-
+        # self._models = SVC(kernel='rbf', probability=False)
+        # self._model_names = "BRF SVM"
+        self._models = RandomForestClassifier()
         super().__init__()
 
     def _fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
@@ -68,8 +71,19 @@ class AgodaCancellationEstimator(BaseEstimator):
         return self._models.predict(X)
 
     def present(self, X, y):
-        confusion_matrix(y, self.predict(X))
+        print(confusion_matrix(y, self.predict(X)))
         return self._models.score(X, y)
+
+    def report(self, X_test, y_true):
+        y_pred = self._models.predict(X_test)
+
+        acc_rd_clf = accuracy_score(y_true, y_pred)
+        conf = confusion_matrix(y_true, y_pred)
+        clf_report = classification_report(y_true, y_pred)
+
+        print(f"Accuracy Score of Random Forest is : {acc_rd_clf}")
+        print(f"Confusion Matrix : \n{conf}")
+        print(f"Classification Report : \n{clf_report}")
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
