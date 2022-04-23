@@ -96,15 +96,19 @@ class Perceptron(BaseEstimator):
         if self.include_intercept_:
             intercept = np.ones([np.shape(X)[0], 1])
             samples = np.concatenate((intercept, X), axis=1)
-        self.coefs_ = np.zeros(np.shape(samples)[0])
-        for i in range(self.max_iter_):
+        self.coefs_ = np.zeros(np.shape(samples)[1])
+        for i in range(self.max_iter_):#just need to run on max_iter dont need i
             all_right = True
-            for j in samples:
-                if y[i] * np.inner(self.coefs_, samples[j]) <= 0:
+            for index, sample in enumerate(samples):
+                if y[index] * np.inner(self.coefs_, sample) <= 0:
                     all_right = False
-                    self.coefs_ = self.coefs_ + y[i] * X[i]
+                    self.coefs_ = self.coefs_ + (y[index] * sample)
+                    self.fitted_ = True
+                    break
             if all_right:
-                break
+                return
+            self.callback_(self, X, y)
+
 
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
@@ -122,10 +126,15 @@ class Perceptron(BaseEstimator):
             Predicted responses of given samples
         """
         samples = X
+        if samples.ndim == 1:
+            samples = samples.reshape((-1, 1))
         if self.include_intercept_:
-            intercept = np.ones([np.shape(X)[0], 1])
-            samples = np.concatenate((intercept, X), axis=1)
-        return self.coefs_ @ samples
+            intercept = np.ones([np.shape(samples)[0], 1])
+            samples = np.concatenate((intercept, samples), axis=1)
+        y_pred =  samples @ self.coefs_
+        y_pred[y_pred >= 0] = 1
+        y_pred[y_pred < 0] = -1
+        return y_pred
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """

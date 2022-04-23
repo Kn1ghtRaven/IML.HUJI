@@ -31,8 +31,9 @@ def load_dataset(filename: str) -> Tuple[np.ndarray, np.ndarray]:
 
     """
     full_data = np.load(filename)
-
-    raise NotImplementedError()
+    X = full_data[:, 0:2]
+    y = full_data[:, 2]
+    return X, y
 
 
 def run_perceptron():
@@ -43,27 +44,38 @@ def run_perceptron():
     as a function of the training iterations (x-axis).
     """
     iteretions = 1000
-    for n, f in [("Linearly Separable", "linearly_separable.npy"), ("Linearly Inseparable", "linearly_inseparable.npy")]:
+    folder = "../datasets/"
+    for n, f in [("Linearly Separable", folder + "linearly_separable.npy"), ("Linearly Inseparable", folder + "linearly_inseparable.npy")]:
         # Load dataset
         data, label = load_dataset(f)
         losses = []
-        for iteretion in range(1, iteretions+1):
-            losses_per_iter = []
-            model = Perceptron(max_iter=iteretion)
-            # Fit Perceptron and record loss in each fit iteration
-            model.fit(data, label)
-            for index, row in enumerate(data):
-                losses_per_iter.append(default_callback(model, row, label[index]))
-            losses.append(np.sum(losses_per_iter))
+
+        def callback(presp: Perceptron, x, y):
+            loss_per_iter = presp.loss(data, label)
+            losses.append(loss_per_iter)
+            return loss_per_iter
+
+        model = Perceptron(max_iter=iteretions, callback=callback)
+        model.fit(data, label)
+        # for iteretion in range(1, iteretions+1):
+        #     losses_per_iter = []
+        #     model = Perceptron(max_iter=iteretion)
+        #     # Fit Perceptron and record loss in each fit iteration
+        #     model.fit(data, label)
+        #     for index, row in enumerate(data):
+        #         losses_per_iter.append(default_callback(model, row, label[index]))
+        #     losses.append(np.sum(losses_per_iter)/len(losses_per_iter)) # normalize the number from 0 to 300 to 0. to 1
         # Plot figure
-        fig = px.line(x=np.arange(1, iteretions+1), y=losses)
+        fig = px.line(x=np.arange(1, len(losses)+1), y=losses)
         fig.update_layout(
             yaxis_title='training loss values',
             xaxis_title='iteretions',
             title=n,
         )
-        fig.show()
-
+        # fig.show()
+        fig.write_image("../images/ex3q1_"+n+".png")
+        print(n)
+        print(losses)
 
 
 def compare_gaussian_classifiers():

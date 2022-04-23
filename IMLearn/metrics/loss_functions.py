@@ -39,10 +39,10 @@ def misclassification_error(y_true: np.ndarray, y_pred: np.ndarray, normalize: b
     -------
     Misclassification of given predictions
     """
-    right_answers = np.sum(y_true == y_pred)
+    wrong_answers = np.sum(y_true != y_pred)
     if normalize:
-        right_answers = right_answers/np.shape(y_pred)[0]
-    return right_answers
+        wrong_answers = wrong_answers/np.shape(y_pred)[0]
+    return wrong_answers
 
 
 def accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -60,7 +60,10 @@ def accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     -------
     Accuracy of given predictions
     """
-    raise NotImplementedError()
+    true_posi = np.sum(y_true == 1 and y_pred == 1 and y_true == y_pred)
+    true_negative = np.sum(y_true != 1 and y_pred != 1 and y_true == y_pred)
+    acc = (true_negative + true_posi)/len(y_true)
+    return acc
 
 
 def cross_entropy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -79,3 +82,9 @@ def cross_entropy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     Cross entropy of given predictions
     """
     raise NotImplementedError()
+
+
+if __name__ == '__main__':
+    y_pred = np.arange(10) + 1
+    y_true = np.arange(10)
+    print(misclassification_error(y_true, y_pred))
