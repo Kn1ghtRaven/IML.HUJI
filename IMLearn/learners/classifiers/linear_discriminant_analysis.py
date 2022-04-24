@@ -55,15 +55,16 @@ class LDA(BaseEstimator):
         for index, value in enumerate(self.classes_):
             self.pi_[index] = np.sum(y == value)
         # find mu
+        y = y.reshape((-1, 1))
         full_data = np.concatenate((X, y), axis=1)
         self.mu_ = np.zeros((np.shape(self.classes_)[0], np.shape(X)[1]))
         dist_from_mu = full_data.copy()
         var_class =  np.zeros(shape=np.shape(self.classes_))
         for index, value in enumerate(self.classes_):
-            self.mu_[index] = np.sum(full_data[full_data[:, -1] == value][:, :-1], axis=1)/self.pi_[index]
-            dist_from_mu[dist_from_mu[:, -1] == value] = dist_from_mu[dist_from_mu[:, -1] == value][:, :-1] - self.mu_[index] # i dont know if this will work need to debug
+            self.mu_[index] = np.sum(full_data[full_data[:, -1] == value][:, :-1], axis=0)/self.pi_[index]
+            dist_from_mu[dist_from_mu[:, -1] == value][:, :-1] = dist_from_mu[dist_from_mu[:, -1] == value][:, :-1] - self.mu_[index] # i dont know if this will work need to debug
         # find cov
-        self.cov_ = np.sum(dist_from_mu.T @ dist_from_mu)/(np.shape(X)[0] - np.shape(self.classes_)[0])
+        self.cov_ = (dist_from_mu[:, :-1].T @ dist_from_mu[:, :-1])/(np.shape(X)[0] - np.shape(self.classes_)[0])
         self._cov_inv = inv(self.cov_)
         self.pi_ = self.pi_ / len(y)
 
@@ -103,7 +104,7 @@ class LDA(BaseEstimator):
             raise ValueError("Estimator must first be fitted before calling `likelihood` function")
         number_of_fitures = np.shape(X)[1]
         likelihoods = np.zeros((np.shape(X)[0], np.shape(self.classes_)[0]))
-        for index in self.classes_:
+        for index, value in enumerate(self.classes_):
             likelihoods[:, index] = np.sqrt(1 / ((2 * np.pi)**number_of_fitures * det(self.cov_))) * np.exp(-1 / 2 * ((X - self.mu_[index]) @ self._cov_inv @(X - self.mu_[index]).T))
         return likelihoods
 

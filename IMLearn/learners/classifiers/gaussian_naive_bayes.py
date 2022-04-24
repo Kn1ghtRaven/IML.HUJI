@@ -42,7 +42,28 @@ class GaussianNaiveBayes(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-        raise NotImplementedError()
+        #find classes
+        self.classes_ = np.unique(y)
+        #find pi
+        self.pi_ = np.zeros(shape=np.shape(self.classes_))
+        for index, value in enumerate(self.classes_):
+            self.pi_[index] = np.sum(y == value)
+        #find mu
+        y = y.reshape((-1, 1))
+        full_data = np.concatenate((X, y), axis=1)
+        self.mu_ = np.zeros((np.shape(self.classes_)[0], np.shape(X)[1]))
+        dist_from_mu = full_data.copy()
+        self.vars_ = np.zeros(shape=(np.shape(self.classes_)[0], np.shape(X)[1]))
+        for index, value in enumerate(self.classes_):
+            self.mu_[index] = np.sum(full_data[full_data[:, -1] == value][:, :-1], axis=0) / self.pi_[index]
+            dist_from_mu[dist_from_mu[:, -1] == value][:, :-1] = (dist_from_mu[dist_from_mu[:, -1] == value][:, :-1] - self.mu_[index])/np.sqrt(self.pi_[index])  # i dont know if this will work need to debug
+        #find vars
+        cov = dist_from_mu[:, :-1].T @ dist_from_mu[:, :-1]
+        # cov = np.sum(cov)
+        self.vars_ = np.diag(cov)
+        #normalize pi
+        self.pi_ = self.pi_ / len(y)
+
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -58,7 +79,8 @@ class GaussianNaiveBayes(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        raise NotImplementedError()
+        return self.likelihood(X).max(1)
+
 
     def likelihood(self, X: np.ndarray) -> np.ndarray:
         """
@@ -77,8 +99,13 @@ class GaussianNaiveBayes(BaseEstimator):
         """
         if not self.fitted_:
             raise ValueError("Estimator must first be fitted before calling `likelihood` function")
-
-        raise NotImplementedError()
+        number_of_fitures = np.shape(X)[1]
+        likelihoods = np.zeros((np.shape(X)[0], np.shape(self.classes_)[0]))
+        for index, value in enumerate(self.classes_):
+            cov = np.diag(np.diag(self.vars_[index].reshape(-1, 1))) # TODO fix this line it does not work need to put the values on the diag of a matrix
+            cov_inv = np.linalg.inv(cov)
+            likelihoods[:, index] = np.sqrt(1 / ((2 * np.pi)**number_of_fitures * np.linalg.det(cov))) * np.exp(-1 / 2 * ((X - self.mu_[index]) @ cov_inv @(X - self.mu_[index]).T))
+        return likelihoods
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """

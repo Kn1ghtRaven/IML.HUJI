@@ -82,20 +82,25 @@ def compare_gaussian_classifiers():
     """
     Fit both Gaussian Naive Bayes and LDA classifiers on both gaussians1 and gaussians2 datasets
     """
-    for f in ["gaussian1.npy", "gaussian2.npy"]:
+    folder = "../datasets/"
+    for f in [folder + "gaussian1.npy", folder + "gaussian2.npy"]:
         # Load dataset
-        raise NotImplementedError()
-
+        data, label = load_dataset(f)
         # Fit models and predict over training set
-        raise NotImplementedError()
-
+        gnb = GaussianNaiveBayes()
+        lda = LDA()
+        gnb.fit(data, label)
+        lda.fit(data, label)
+        pred_gnb = gnb.predict(data)
+        pred_lda = lda.predict(data)
         # Plot a figure with two suplots, showing the Gaussian Naive Bayes predictions on the left and LDA predictions
         # on the right. Plot title should specify dataset used and subplot titles should specify algorithm and accuracy
         from IMLearn.metrics import accuracy
+
         raise NotImplementedError()
 
 
 if __name__ == '__main__':
     np.random.seed(0)
-    run_perceptron()
+    # run_perceptron()
     compare_gaussian_classifiers()
