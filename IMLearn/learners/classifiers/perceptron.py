@@ -131,7 +131,7 @@ class Perceptron(BaseEstimator):
         if self.include_intercept_:
             intercept = np.ones([np.shape(samples)[0], 1])
             samples = np.concatenate((intercept, samples), axis=1)
-        y_pred =  samples @ self.coefs_
+        y_pred = samples @ self.coefs_
         y_pred[y_pred >= 0] = 1
         y_pred[y_pred < 0] = -1
         return y_pred

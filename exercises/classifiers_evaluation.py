@@ -78,14 +78,6 @@ def run_perceptron():
 
         model = Perceptron(max_iter=iteretions, callback=callback)
         model.fit(data, label)
-        # for iteretion in range(1, iteretions+1):
-        #     losses_per_iter = []
-        #     model = Perceptron(max_iter=iteretion)
-        #     # Fit Perceptron and record loss in each fit iteration
-        #     model.fit(data, label)
-        #     for index, row in enumerate(data):
-        #         losses_per_iter.append(default_callback(model, row, label[index]))
-        #     losses.append(np.sum(losses_per_iter)/len(losses_per_iter)) # normalize the number from 0 to 300 to 0. to 1
         # Plot figure
         fig = px.line(x=np.arange(1, len(losses)+1), y=losses)
         fig.update_layout(
@@ -93,10 +85,8 @@ def run_perceptron():
             xaxis_title='iteretions',
             title=n,
         )
-        # fig.show()
+        fig.show()
         fig.write_image("../images/ex3q1_"+n+".png")
-        print(n)
-        print(losses)
 
 
 def compare_gaussian_classifiers():
@@ -133,7 +123,7 @@ def compare_gaussian_classifiers():
             row=1, col=1)
         fig.add_trace(go.Scatter(x=gnb.mu_[:, 0], y=gnb.mu_[:, 1], mode="markers", marker=dict(color="black", symbol="x")), row=1, col=1)
         for i in range(np.shape(gnb.mu_)[0]):
-            fig.add_trace(get_ellipse(gnb.mu_[i],gnb.vars_[i] * np.identity(np.shape(gnb.vars_[i].reshape(-1, 1))[0])), row=1, col=1)
+            fig.add_trace(get_ellipse(gnb.mu_[i], gnb.vars_[i] * np.identity(np.shape(gnb.vars_[i].reshape(-1, 1))[0])), row=1, col=1)
         #plot LDA
         fig.add_trace(
             go.Scatter(x=df["x"], y=df["y"], mode="markers", marker=dict(color=df["pred_lda"], symbol=symbols[df["lable"].astype(int)])),

@@ -58,12 +58,7 @@ class GaussianNaiveBayes(BaseEstimator):
         for index, value in enumerate(self.classes_):
             self.mu_[index] = np.sum(full_data[full_data[:, -1] == value][:, :-1], axis=0) / self.pi_[index]
             # find vars
-            # dist_from_mu[dist_from_mu[:, -1] == value][:, :-1] = (dist_from_mu[dist_from_mu[:, -1] == value][:, :-1] - self.mu_[index])/np.sqrt(self.pi_[index])  # i dont know if this will work need to debug
-            # cov[index, :, :] = dist_from_mu[:, :-1].T @ dist_from_mu[:, :-1]
-            # self.vars_[index, :] = np.diag(cov[index, :, :])
             self.vars_[index, :] = np.var(full_data[full_data[:, -1] == value][:, :-1], axis=0)
-        # cov = np.sum(cov)
-
         #normalize pi
         self.pi_ = self.pi_ / len(y)
 
@@ -107,7 +102,7 @@ class GaussianNaiveBayes(BaseEstimator):
         for index, value in enumerate(self.classes_):
             test = self.vars_[index].reshape(-1, 1)
             cov = self.vars_[index] * np.identity(np.shape(test)[0])
-            cov_inv = np.linalg.inv(cov) # TODO check if the diag is correct in the exp
+            cov_inv = np.linalg.inv(cov)
             likelihoods[:, index] = self.pi_[index] * np.sqrt(1 / ((2 * np.pi)**number_of_fitures * np.linalg.det(cov))) * np.exp(-1 / 2 * np.diag((X - self.mu_[index]) @ cov_inv @(X - self.mu_[index]).T))
         return likelihoods
 
