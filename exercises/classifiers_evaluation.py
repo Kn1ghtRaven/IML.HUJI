@@ -52,10 +52,9 @@ def load_dataset(filename: str) -> Tuple[np.ndarray, np.ndarray]:
         Class vector specifying for each sample its class
 
     """
-    full_data = np.load(filename)
-    X = full_data[:, 0:2]
-    y = full_data[:, 2]
-    return X, y
+    data = np.load(filename)
+    return data[:, :2], data[:, 2].astype(int)
+
 
 
 def run_perceptron():
@@ -144,10 +143,11 @@ def compare_gaussian_classifiers():
                        marker=dict(color="black", symbol="x")), row=1, col=2)
         for i in range(np.shape(lda.classes_)[0]):
             fig.add_trace(get_ellipse(lda.mu_[i, :], lda.cov_), row=1, col=2)
+        fig.update_layout( title_text="Data Set : "+f, showlegend=False)
         fig.write_image("../images/ex3q2_"+f+".png")
         fig.show()
 
 if __name__ == '__main__':
     np.random.seed(0)
-    # run_perceptron()
+    run_perceptron()
     compare_gaussian_classifiers()

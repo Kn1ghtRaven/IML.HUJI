@@ -108,7 +108,7 @@ class GaussianNaiveBayes(BaseEstimator):
             test = self.vars_[index].reshape(-1, 1)
             cov = self.vars_[index] * np.identity(np.shape(test)[0])
             cov_inv = np.linalg.inv(cov) # TODO check if the diag is correct in the exp
-            likelihoods[:, index] = np.sqrt(1 / ((2 * np.pi)**number_of_fitures * np.linalg.det(cov))) * np.exp(-1 / 2 * np.diag((X - self.mu_[index]) @ cov_inv @(X - self.mu_[index]).T))
+            likelihoods[:, index] = self.pi_[index] * np.sqrt(1 / ((2 * np.pi)**number_of_fitures * np.linalg.det(cov))) * np.exp(-1 / 2 * np.diag((X - self.mu_[index]) @ cov_inv @(X - self.mu_[index]).T))
         return likelihoods
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
