@@ -54,13 +54,16 @@ class GaussianNaiveBayes(BaseEstimator):
         self.mu_ = np.zeros((np.shape(self.classes_)[0], np.shape(X)[1]))
         dist_from_mu = full_data.copy()
         self.vars_ = np.zeros(shape=(np.shape(self.classes_)[0], np.shape(X)[1]))
+        cov = np.zeros((np.shape(self.classes_)[0], np.shape(X)[1], np.shape(X)[1]))
         for index, value in enumerate(self.classes_):
             self.mu_[index] = np.sum(full_data[full_data[:, -1] == value][:, :-1], axis=0) / self.pi_[index]
-            dist_from_mu[dist_from_mu[:, -1] == value][:, :-1] = (dist_from_mu[dist_from_mu[:, -1] == value][:, :-1] - self.mu_[index])/np.sqrt(self.pi_[index])  # i dont know if this will work need to debug
-        #find vars
-        cov = dist_from_mu[:, :-1].T @ dist_from_mu[:, :-1]
+            # find vars
+            # dist_from_mu[dist_from_mu[:, -1] == value][:, :-1] = (dist_from_mu[dist_from_mu[:, -1] == value][:, :-1] - self.mu_[index])/np.sqrt(self.pi_[index])  # i dont know if this will work need to debug
+            # cov[index, :, :] = dist_from_mu[:, :-1].T @ dist_from_mu[:, :-1]
+            # self.vars_[index, :] = np.diag(cov[index, :, :])
+            self.vars_[index, :] = np.var(full_data[full_data[:, -1] == value][:, :-1], axis=0)
         # cov = np.sum(cov)
-        self.vars_ = np.diag(cov)
+
         #normalize pi
         self.pi_ = self.pi_ / len(y)
 
@@ -79,7 +82,7 @@ class GaussianNaiveBayes(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        return self.likelihood(X).max(1)
+        return self.likelihood(X).argmax(1)
 
 
     def likelihood(self, X: np.ndarray) -> np.ndarray:
@@ -102,9 +105,10 @@ class GaussianNaiveBayes(BaseEstimator):
         number_of_fitures = np.shape(X)[1]
         likelihoods = np.zeros((np.shape(X)[0], np.shape(self.classes_)[0]))
         for index, value in enumerate(self.classes_):
-            cov = np.diag(np.diag(self.vars_[index].reshape(-1, 1))) # TODO fix this line it does not work need to put the values on the diag of a matrix
-            cov_inv = np.linalg.inv(cov)
-            likelihoods[:, index] = np.sqrt(1 / ((2 * np.pi)**number_of_fitures * np.linalg.det(cov))) * np.exp(-1 / 2 * ((X - self.mu_[index]) @ cov_inv @(X - self.mu_[index]).T))
+            test = self.vars_[index].reshape(-1, 1)
+            cov = self.vars_[index] * np.identity(np.shape(test)[0])
+            cov_inv = np.linalg.inv(cov) # TODO check if the diag is correct in the exp
+            likelihoods[:, index] = np.sqrt(1 / ((2 * np.pi)**number_of_fitures * np.linalg.det(cov))) * np.exp(-1 / 2 * np.diag((X - self.mu_[index]) @ cov_inv @(X - self.mu_[index]).T))
         return likelihoods
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:

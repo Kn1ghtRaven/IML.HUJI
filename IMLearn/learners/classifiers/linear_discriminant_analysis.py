@@ -65,6 +65,7 @@ class LDA(BaseEstimator):
             dist_from_mu[dist_from_mu[:, -1] == value][:, :-1] = dist_from_mu[dist_from_mu[:, -1] == value][:, :-1] - self.mu_[index] # i dont know if this will work need to debug
         # find cov
         self.cov_ = (dist_from_mu[:, :-1].T @ dist_from_mu[:, :-1])/(np.shape(X)[0] - np.shape(self.classes_)[0])
+        # self.cov_ = np.cov(full_data[full_data[:, -1] == value][:, :-1], axis=0)
         self._cov_inv = inv(self.cov_)
         self.pi_ = self.pi_ / len(y)
 
@@ -83,7 +84,7 @@ class LDA(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        return self.likelihood(X).max(1)
+        return self.likelihood(X).argmax(1)
 
     def likelihood(self, X: np.ndarray) -> np.ndarray:
         """
@@ -105,7 +106,7 @@ class LDA(BaseEstimator):
         number_of_fitures = np.shape(X)[1]
         likelihoods = np.zeros((np.shape(X)[0], np.shape(self.classes_)[0]))
         for index, value in enumerate(self.classes_):
-            likelihoods[:, index] = np.sqrt(1 / ((2 * np.pi)**number_of_fitures * det(self.cov_))) * np.exp(-1 / 2 * ((X - self.mu_[index]) @ self._cov_inv @(X - self.mu_[index]).T))
+            likelihoods[:, index] = np.sqrt(1 / ((2 * np.pi)**number_of_fitures * det(self.cov_))) * np.exp(-1 / 2 * np.diag((X - self.mu_[index]) @ self._cov_inv @(X - self.mu_[index]).T))
         return likelihoods
 
 
