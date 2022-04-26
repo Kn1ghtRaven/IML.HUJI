@@ -86,7 +86,7 @@ class LDA(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        return self.likelihood(X).argmax(1)
+        return self.classes_[self.likelihood(X).argmax(1)]
 
     def likelihood(self, X: np.ndarray) -> np.ndarray:
         """

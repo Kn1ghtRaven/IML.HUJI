@@ -136,8 +136,25 @@ def compare_gaussian_classifiers():
         fig.update_layout( title_text="Data Set : "+f, showlegend=False)
         fig.write_image("../images/ex3q2_"+f+".png")
         fig.show()
+        # print("loss in {} GNB : {}".format(f, gnb.loss(data, label)))
+        # print("loss in {} LDA : {} ".format(f, lda.loss(data, label)))
+
+def quizz():
+    # Y = np.array([0, 0, 1, 1, 1, 1])
+    # X = np.array([[1, 1], [1, 2], [2, 3], [2, 4], [3, 3], [3, 4]])
+    # gnb = GaussianNaiveBayes()
+    # gnb.fit(X, Y)
+    # print(gnb.vars_[0, 1])
+    # print(gnb.vars_[1, 1])
+    Y2 = np.array([0, 0, 1, 1, 1, 1, 2, 2])
+    X2 = np.array([0, 1, 2, 3, 4, 5, 6, 7])
+    X2 = X2.reshape((-1, 1))
+    gnb2 = GaussianNaiveBayes()
+    gnb2.fit(X2, Y2)
+    print(gnb2.mu_[2])
 
 if __name__ == '__main__':
     np.random.seed(0)
-    run_perceptron()
+    # run_perceptron()
     compare_gaussian_classifiers()
+    # quizz()
