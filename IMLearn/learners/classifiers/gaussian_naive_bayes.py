@@ -58,7 +58,7 @@ class GaussianNaiveBayes(BaseEstimator):
         for index, value in enumerate(self.classes_):
             self.mu_[index] = np.sum(full_data[full_data[:, -1] == value][:, :-1], axis=0) / self.pi_[index]
             # find vars
-            self.vars_[index, :] = np.var(full_data[full_data[:, -1] == value][:, :-1], axis=0)
+            self.vars_[index, :] = np.var(full_data[full_data[:, -1] == value][:, :-1], axis=0, ddof=1)
         #normalize pi
         self.pi_ = self.pi_ / len(y)
 

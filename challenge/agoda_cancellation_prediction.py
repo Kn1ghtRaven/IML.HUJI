@@ -172,7 +172,7 @@ if __name__ == '__main__':
     test = load_test_set("../challenge/testsetweekly/test_set_week_4.csv")
     # Fit model over data
     cols = train_X.columns.intersection(test.columns)
-    estimator = AgodaCancellationEstimator().fit(train_X[cols], train_y)
+    estimator = AgodaCancellationEstimator(train_X[cols]).fit(train_X[cols], train_y)
     # estimator.report(test_X[cols], test_y)
     # Store model predictions over test set
     # evaluate_and_export(estimator, test_X, "318636081_324190693_208543520.csv")

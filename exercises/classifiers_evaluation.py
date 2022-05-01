@@ -139,19 +139,44 @@ def compare_gaussian_classifiers():
         # print("loss in {} GNB : {}".format(f, gnb.loss(data, label)))
         # print("loss in {} LDA : {} ".format(f, lda.loss(data, label)))
 
-# def quizz():
-#     # Y = np.array([0, 0, 1, 1, 1, 1])
-#     # X = np.array([[1, 1], [1, 2], [2, 3], [2, 4], [3, 3], [3, 4]])
-#     # gnb = GaussianNaiveBayes()
-#     # gnb.fit(X, Y)
-#     # print(gnb.vars_[0, 1])
-#     # print(gnb.vars_[1, 1])
-#     Y2 = np.array([0, 0, 1, 1, 1, 1, 2, 2])
-#     X2 = np.array([0, 1, 2, 3, 4, 5, 6, 7])
-#     X2 = X2.reshape((-1, 1))
-#     gnb2 = GaussianNaiveBayes()
-#     gnb2.fit(X2, Y2)
-#     print(gnb2.mu_[2])
+def quizz():
+    Y = np.array([0, 0, 1, 1, 1, 1])
+    X = np.array([[1, 1], [1, 2], [2, 3], [2, 4], [3, 3], [3, 4]])
+    gnb = GaussianNaiveBayes()
+    gnb.fit(X, Y)
+    Y2 = np.array([0, 0, 1, 1, 1, 1, 2, 2])
+    X2 = np.array([0, 1, 2, 3, 4, 5, 6, 7])
+    X2 = X2.reshape((-1, 1))
+    gnb2 = GaussianNaiveBayes()
+    gnb2.fit(X2, Y2)
+    print("Question 1 : ")
+    print("gnb probability for class 0 is :%f" % gnb2.pi_[0])
+    print("gnb mu class 1 :%f" % gnb2.mu_[1])
+    print("Question 2 : ")
+    print("gnb var[0, 0] :%f" % gnb.vars_[0, 0])
+    print("gnb var[1, 0] :%f" % gnb.vars_[1, 0])
+    print("Question 3 : ")
+    print("gnb mu class 2 :%f" % gnb2.mu_[2])
+
+    iteretions = 1000
+    folder = "../datasets/"
+    for n, f in [("Linearly Separable", folder + "linearly_separable.npy")]:
+        # Load dataset
+        data, label = load_dataset(f)
+        losses = [0]
+        got_to_0 = [False]
+        def callback(presp: Perceptron, x, y):
+            loss_per_iter = presp.loss(data, label)
+            if loss_per_iter > 0 and not got_to_0[0]:
+                losses[0] += 1
+            else:
+                got_to_0[0] = True
+            return loss_per_iter
+
+        model = Perceptron(max_iter=iteretions, callback=callback)
+        model.fit(data, label)
+    print("Question 4 : ")
+    print("the number of iteretions to get to 0 is : %f" % losses[0])
 
 if __name__ == '__main__':
     np.random.seed(0)
